@@ -125,6 +125,46 @@ where
         self.fast = fast
     }
 
+    fn st(&self, mut mpsse_cmd: MpsseCmdBuilder, state: &FtInner<Device>) -> MpsseCmdBuilder {
+        // println!("st");
+        for _ in 0..self.start_stop_cmds {
+            mpsse_cmd = mpsse_cmd.set_gpio_lower(state.value | SCL | SDA, SCL | SDA | state.direction)
+        }
+        for _ in 0..self.start_stop_cmds {
+            mpsse_cmd = mpsse_cmd.set_gpio_lower(state.value | SCL, SCL | SDA | state.direction)
+        }
+        mpsse_cmd
+    }
+
+
+    fn sr(&self, mut mpsse_cmd: MpsseCmdBuilder, state: &FtInner<Device>) -> MpsseCmdBuilder {
+        // println!("sr");
+        for _ in 0..self.start_stop_cmds {
+            mpsse_cmd = mpsse_cmd.set_gpio_lower(state.value | SCL | SDA, SCL | SDA | state.direction)
+        }
+        for _ in 0..self.start_stop_cmds {
+            mpsse_cmd = mpsse_cmd.set_gpio_lower(state.value | SCL, SCL | SDA | state.direction)
+        }
+        for _ in 0..self.start_stop_cmds {
+            mpsse_cmd = mpsse_cmd.set_gpio_lower(state.value, SCL | SDA | state.direction)
+        }
+        mpsse_cmd
+    }
+
+    fn sp(&self, mut mpsse_cmd: MpsseCmdBuilder, state: &FtInner<Device>) -> MpsseCmdBuilder {
+        // println!("sp");
+        for _ in 0..self.start_stop_cmds {
+            mpsse_cmd = mpsse_cmd.set_gpio_lower(state.value, SCL | SDA | state.direction)
+        }
+        for _ in 0..self.start_stop_cmds {
+            mpsse_cmd = mpsse_cmd.set_gpio_lower(state.value | SCL, SCL | SDA | state.direction)
+        }
+        for _ in 0..self.start_stop_cmds {
+            mpsse_cmd = mpsse_cmd.set_gpio_lower(state.value | SCL | SDA, SCL | SDA | state.direction)
+        }
+        mpsse_cmd
+    }
+
     fn read_fast(&mut self, address: u8, buffer: &mut [u8]) -> Result<(), Error<E>> {
         assert!(!buffer.is_empty(), "buffer must be a non-empty slice");
 
@@ -410,12 +450,7 @@ where
         let mut mpsse_cmd: MpsseCmdBuilder = MpsseCmdBuilder::new();
 
         // ST
-        for _ in 0..self.start_stop_cmds {
-            mpsse_cmd = mpsse_cmd.set_gpio_lower(lock.value | SCL | SDA, SCL | SDA | lock.direction)
-        }
-        for _ in 0..self.start_stop_cmds {
-            mpsse_cmd = mpsse_cmd.set_gpio_lower(lock.value | SCL, SCL | SDA | lock.direction)
-        }
+        mpsse_cmd = self.st(mpsse_cmd, &lock);
 
         mpsse_cmd = mpsse_cmd
             // SAD + W
@@ -436,15 +471,7 @@ where
         }
 
         // SR
-        for _ in 0..self.start_stop_cmds {
-            mpsse_cmd = mpsse_cmd.set_gpio_lower(lock.value | SCL | SDA, SCL | SDA | lock.direction)
-        }
-        for _ in 0..self.start_stop_cmds {
-            mpsse_cmd = mpsse_cmd.set_gpio_lower(lock.value | SCL, SCL | SDA | lock.direction)
-        }
-        for _ in 0..self.start_stop_cmds {
-            mpsse_cmd = mpsse_cmd.set_gpio_lower(lock.value, SCL | SDA | lock.direction)
-        }
+        mpsse_cmd = self.sr(mpsse_cmd, &lock);
 
         mpsse_cmd = mpsse_cmd
             // SAD + R
@@ -471,15 +498,7 @@ where
         }
 
         // SP
-        for _ in 0..self.start_stop_cmds {
-            mpsse_cmd = mpsse_cmd.set_gpio_lower(lock.value, SCL | SDA | lock.direction)
-        }
-        for _ in 0..self.start_stop_cmds {
-            mpsse_cmd = mpsse_cmd.set_gpio_lower(lock.value | SCL, SCL | SDA | lock.direction)
-        }
-        for _ in 0..self.start_stop_cmds {
-            mpsse_cmd = mpsse_cmd.set_gpio_lower(lock.value | SCL | SDA, SCL | SDA | lock.direction)
-        }
+        mpsse_cmd = self.sp(mpsse_cmd, &lock);
 
         mpsse_cmd = mpsse_cmd
             // Idle
@@ -513,12 +532,7 @@ where
 
         // ST
         let mut mpsse_cmd: MpsseCmdBuilder = MpsseCmdBuilder::new();
-        for _ in 0..self.start_stop_cmds {
-            mpsse_cmd = mpsse_cmd.set_gpio_lower(lock.value | SCL | SDA, SCL | SDA | lock.direction)
-        }
-        for _ in 0..self.start_stop_cmds {
-            mpsse_cmd = mpsse_cmd.set_gpio_lower(lock.value | SCL, SCL | SDA | lock.direction)
-        }
+        mpsse_cmd = self.st(mpsse_cmd, &lock);
 
         mpsse_cmd = mpsse_cmd
             // SAD + W
@@ -556,15 +570,7 @@ where
 
         // SR
         let mut mpsse_cmd: MpsseCmdBuilder = MpsseCmdBuilder::new();
-        for _ in 0..self.start_stop_cmds {
-            mpsse_cmd = mpsse_cmd.set_gpio_lower(lock.value | SCL | SDA, SCL | SDA | lock.direction)
-        }
-        for _ in 0..self.start_stop_cmds {
-            mpsse_cmd = mpsse_cmd.set_gpio_lower(lock.value | SCL, SCL | SDA | lock.direction)
-        }
-        for _ in 0..self.start_stop_cmds {
-            mpsse_cmd = mpsse_cmd.set_gpio_lower(lock.value, SCL | SDA | lock.direction)
-        }
+        mpsse_cmd = self.sr(mpsse_cmd, &lock);
 
         mpsse_cmd = mpsse_cmd
             // SAD + R
@@ -600,15 +606,7 @@ where
         }
 
         // SP
-        for _ in 0..self.start_stop_cmds {
-            mpsse_cmd = mpsse_cmd.set_gpio_lower(lock.value, SCL | SDA | lock.direction)
-        }
-        for _ in 0..self.start_stop_cmds {
-            mpsse_cmd = mpsse_cmd.set_gpio_lower(lock.value | SCL, SCL | SDA | lock.direction)
-        }
-        for _ in 0..self.start_stop_cmds {
-            mpsse_cmd = mpsse_cmd.set_gpio_lower(lock.value | SCL | SDA, SCL | SDA | lock.direction)
-        }
+        mpsse_cmd = self.sp(mpsse_cmd, &lock);
 
         mpsse_cmd = mpsse_cmd
             // Idle
@@ -669,6 +667,162 @@ where
             self.write_read_fast(address, bytes, buffer)
         } else {
             self.write_read_slow(address, bytes, buffer)
+        }
+    }
+}
+
+impl<Device, E> eh1::i2c::I2c for I2c<Device>
+where
+    Device: MpsseCmdExecutor<Error = E>,
+    E: std::error::Error,
+    Error<E>: From<E> + eh1::i2c::Error,
+{
+    fn transaction(
+            &mut self,
+            address: u8,
+            operations: &mut [eh1::i2c::Operation<'_>],
+        ) -> Result<(), Self::Error> {
+
+        enum Prev {
+            None,
+            Read,
+            Write,
+        }
+
+        let mut lock = self.mtx.lock().expect("Failed to aquire FTDI mutex");
+
+        // ST
+        {
+            let mut mpsse_cmd: MpsseCmdBuilder = MpsseCmdBuilder::new();
+            mpsse_cmd = self.st(mpsse_cmd, &lock).send_immediate();
+            lock.ft.send(mpsse_cmd.as_slice())?;
+        }
+
+
+        let mut prev = Prev::None;
+        let last_op = operations.len() - 1;
+        for (iop, op) in operations.iter_mut().enumerate() {
+            let mut mpsse_cmd: MpsseCmdBuilder = MpsseCmdBuilder::new();
+            // println!("transaction op {:?}", op);
+            match op {
+                eh1::i2c::Operation::Read(buf) => {
+                    if matches!(prev, Prev::Write) {
+                        let mut mpsse_cmd: MpsseCmdBuilder = MpsseCmdBuilder::new();
+                        mpsse_cmd = self.sr(mpsse_cmd, &lock);
+                        mpsse_cmd = mpsse_cmd.send_immediate();
+                        lock.ft.send(mpsse_cmd.as_slice())?;
+                    }
+                    prev = Prev::Read;
+                    // do the read
+                    mpsse_cmd = mpsse_cmd
+                        // SAD + R
+                        .clock_bits_out(BITS_OUT, (address << 1) | 1, 8)
+                        // SAK
+                        .set_gpio_lower(lock.value, SCL | lock.direction)
+                        .clock_bits_in(BITS_IN, 1);
+
+                    for idx in 0..buf.len() {
+                        mpsse_cmd = mpsse_cmd
+                            .set_gpio_lower(lock.value, SCL | lock.direction)
+                            .clock_bits_in(BITS_IN, 8);
+                        if idx == buf.len() - 1 && iop == last_op {
+                            // NMAK
+                            mpsse_cmd = mpsse_cmd
+                                .set_gpio_lower(lock.value, SCL | SDA | lock.direction)
+                                .clock_bits_out(BITS_OUT, 0x80, 1)
+                        } else {
+                            // MAK
+                            mpsse_cmd = mpsse_cmd
+                                .set_gpio_lower(lock.value, SCL | SDA | lock.direction)
+                                .clock_bits_out(BITS_OUT, 0x00, 1)
+                        }
+                    }
+                    mpsse_cmd = mpsse_cmd.send_immediate();
+
+                    lock.ft.send(mpsse_cmd.as_slice())?;
+                    // ack of the address
+                    let mut ack_buf: Vec<u8> = vec![0; 1];
+                    lock.ft.recv(&mut ack_buf)?;
+                    // read data
+                    lock.ft.recv(buf)?;
+
+                    if ack_buf.iter().any(|&ack| (ack & 0b1) != 0x00) {
+                        println!("no ack for read {:?}", ack_buf);
+                        return Err(Error::Hal(I2cNoAck))
+                    }
+                },
+                eh1::i2c::Operation::Write(buf) => {
+                    if matches!(prev, Prev::Read) {
+                        let mut mpsse_cmd: MpsseCmdBuilder = MpsseCmdBuilder::new();
+                        mpsse_cmd = self.sr(mpsse_cmd, &lock);
+                        mpsse_cmd = mpsse_cmd.send_immediate();
+                        lock.ft.send(mpsse_cmd.as_slice())?;
+                    }
+                    prev = Prev::Write;
+                    // do the write
+                    mpsse_cmd = mpsse_cmd
+                        // SAD + W
+                        .set_gpio_lower(lock.value, SCL | SDA | lock.direction)
+                        .clock_bits_out(BITS_OUT, address << 1, 8)
+                        // SAK
+                        .set_gpio_lower(lock.value, SCL | lock.direction)
+                        .clock_bits_in(BITS_IN, 1);
+
+                    for byte in buf.iter() {
+                        mpsse_cmd = mpsse_cmd
+                            // Oi
+                            .set_gpio_lower(lock.value, SCL | SDA | lock.direction)
+                            .clock_bits_out(BITS_OUT, *byte, 8)
+                            // SAK
+                            .set_gpio_lower(lock.value, SCL | lock.direction)
+                            .clock_bits_in(BITS_IN, 1);
+                    }
+                    mpsse_cmd = mpsse_cmd.send_immediate();
+
+                    lock.ft.send(mpsse_cmd.as_slice())?;
+                    // +1 for address
+                    let mut ack_buf: Vec<u8> = vec![0; 1 + buf.len()];
+                    lock.ft.recv(&mut ack_buf)?;
+                    if ack_buf.iter().any(|&ack| (ack & 0b1) != 0x00) {
+                        println!("no ack for write {:?}", ack_buf);
+                        return Err(Error::Hal(I2cNoAck))
+                    }
+                }
+            }
+        }
+
+        {
+            // SP
+            let mut mpsse_cmd: MpsseCmdBuilder = MpsseCmdBuilder::new();
+            mpsse_cmd = self.sp(mpsse_cmd, &lock);
+            mpsse_cmd = mpsse_cmd
+                // Idle
+                .set_gpio_lower(lock.value, lock.direction)
+                .send_immediate();
+            lock.ft.send(&mpsse_cmd.as_slice())?;
+        }
+
+        Ok(())
+    }
+
+}
+
+impl<Device, E> eh1::i2c::ErrorType for I2c<Device>
+where
+    Device: MpsseCmdExecutor<Error = E>,
+    E: std::error::Error,
+    Error<E>: From<E> + eh1::i2c::Error,
+{
+    type Error = Error<E>;
+}
+
+#[cfg(feature = "libftd2xx")]
+impl eh1::i2c::Error for Error<libftd2xx::TimeoutError> {
+    fn kind(&self) -> eh1::i2c::ErrorKind {
+        match self {
+            Self::Hal(I2cNoAck) => eh1::i2c::ErrorKind::NoAcknowledge(
+                    eh1::i2c::NoAcknowledgeSource::Unknown),
+            _ => eh1::i2c::ErrorKind::Other,
         }
     }
 }
